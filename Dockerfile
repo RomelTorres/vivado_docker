@@ -1,4 +1,4 @@
-FROM ubuntu:18.04 as stage1
+FROM ubuntu:20.04 as stage1
 MAINTAINER Michael Brown <producer@holotronic.dk>
 
 #install dependences for:
@@ -6,49 +6,49 @@ MAINTAINER Michael Brown <producer@holotronic.dk>
 # * xsim (gcc build-essential to also get make)
 # * MIG tool (libglib2.0-0 libsm6 libxi6 libxrender1 libxrandr2 libfreetype6 libfontconfig)
 # * CI (git)
+# RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y \
+#   build-essential \
+#   git \
+#   libglib2.0-0 \
+#   libsm6 \
+#   libxi6 \
+#   libxrender1 \
+#   libxrandr2 \
+#   libfreetype6 \
+#   libfontconfig \
+#   lsb-release \
+#   software-properties-common
+# 
 RUN apt-get update && apt-get install -y \
-  build-essential \
-  git \
-  libglib2.0-0 \
-  libsm6 \
-  libxi6 \
-  libxrender1 \
-  libxrandr2 \
-  libfreetype6 \
-  libfontconfig \
-  lsb-release \
-  software-properties-common
+   git \
+   net-tools \
+   unzip \
+   gcc \
+   g++ \
+   python \
+   libtinfo5
 
-RUN add-apt-repository ppa:xorg-edgers/ppa
-RUN apt-get update && apt-get install -y \
-  libgl1-mesa-glx \
-  libgl1-mesa-dri \
-  libgl1-mesa-dev
-RUN add-apt-repository --remove ppa:xorg-edgers/ppa
-RUN apt-get update && apt-get install -y \
-  net-tools \
-  unzip \
-  gcc \
-  g++ \
-  python
-COPY xrt_202010.2.6.655_18.04-amd64-xrt.deb /tmp/
-RUN apt-get install -y /tmp/xrt_202010.2.6.655_18.04-amd64-xrt.deb && rm -rf /tmp/*
+# COPY xrt_202110.2.9.0_20.04-amd64-xrt.deb /tmp/
+# RUN apt-get install -y /tmp/xrt_202110.2.9.0_20.04-amd64-xrt.deb && rm -rf /tmp/*
 
 # copy in config file
 COPY install_config-vitis.txt /tmp/
-ADD Xilinx_Unified_2020.1_0602_1208.tar.gz /tmp/
+COPY install_config-petalinux.txt /tmp/
 
-RUN /tmp/Xilinx_Unified_2020.1_0602_1208/xsetup -a XilinxEULA,3rdPartyEULA,WebTalkTerms -b Install -c /tmp/install_config-vitis.txt && \
+ADD Xilinx_Unified_2020.2_1118_1232.tar.gz /tmp/
+
+RUN /tmp/Xilinx_Unified_2020.2_1118_1232/xsetup --agree XilinxEULA,3rdPartyEULA,WebTalkTerms --batch Install --config /tmp/install_config-vitis.txt && \
+    /tmp/Xilinx_Unified_2020.2_1118_1232/xsetup --agree XilinxEULA,3rdPartyEULA,WebTalkTerms --batch Install --config /tmp/install_config-petalinux.txt && \
     rm -rf /tmp/*
 
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 #install dependences for:
 # * downloading Vivado (wget)
 # * xsim (gcc build-essential to also get make)
 # * MIG tool (libglib2.0-0 libsm6 libxi6 libxrender1 libxrandr2 libfreetype6 libfontconfig)
 # * CI (git)
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y \
   build-essential \
   git \
   libglib2.0-0 \
@@ -61,20 +61,13 @@ RUN apt-get update && apt-get install -y \
   lsb-release \
   software-properties-common
 
-RUN add-apt-repository ppa:xorg-edgers/ppa
-RUN apt-get update && apt-get install -y \
-  libgl1-mesa-glx \
-  libgl1-mesa-dri \
-  libgl1-mesa-dev
-RUN add-apt-repository --remove ppa:xorg-edgers/ppa
 RUN apt-get update && apt-get install -y \
   net-tools \
   unzip \
   gcc \
   g++ \
-  python
-COPY xrt_202010.2.6.655_18.04-amd64-xrt.deb /tmp/
-RUN apt-get install -y /tmp/xrt_202010.2.6.655_18.04-amd64-xrt.deb && rm -rf /tmp/*
+  python \
+  libtinfo5
 
 # turn off recommends on container OS
 # install required dependencies
@@ -115,17 +108,23 @@ RUN echo 'APT::Install-Recommends "0";\nAPT::Install-Suggests "0";' > \
 COPY --from=stage1 /tools/Xilinx /tools/Xilinx
 COPY --from=stage1 /root /root
 
+COPY xrt_202110.2.9.0_20.04-amd64-xrt.deb /tmp/
+RUN apt-get install -y /tmp/xrt_202110.2.9.0_20.04-amd64-xrt.deb && rm -rf /tmp/*
+
+RUN /tools/Xilinx/Vitis/2020.2/scripts/installLibs.sh
+
 RUN useradd -m vivado && echo "vivado:vivado" | chpasswd && adduser vivado sudo
 USER vivado
 WORKDIR /home/vivado
 
 #add vivado tools to path
 #copy in the license file
-RUN echo "source /tools/Xilinx/Vivado/2020.1/settings64.sh" >> /home/vivado/.bashrc && \
+RUN echo "source /tools/Xilinx/Vivado/2020.2/settings64.sh" >> /home/vivado/.bashrc && \
+    echo "source /opt/xilinx/xrt/setup.sh" >> /home/vivado/.bashrc && \
     mkdir /home/vivado/.Xilinx
 
 # customize gui (font scaling 125%)
-COPY --chown=vivado:vivado vivado.xml /home/vivado/.Xilinx/Vivado/2020.1/vivado.xml
+#COPY --chown=vivado:vivado vivado.xml /home/vivado/.Xilinx/Vivado/2020.2/vivado.xml
 
 # add U96 board files
-ADD /board_files.tar.gz /tools/Xilinx/Vivado/2020.1/data/boards/
+ADD /board_files.tar.gz /tools/Xilinx/Vivado/2020.2/data/boards/
