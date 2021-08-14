@@ -2,7 +2,7 @@
 
 You should download your vivado version here and your board file folders as board_files.tar.gz.
 
-docker build -t focal-vitis:2020.2 .
+docker build -t bionic-vitis-sdk:2020.2 .
 
 To be able to run the Vivado gui start as:
 

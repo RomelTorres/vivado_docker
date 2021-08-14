@@ -1,4 +1,4 @@
-FROM ubuntu:20.04 as stage1
+FROM ubuntu:18.04 as stage1
 MAINTAINER Michael Brown <producer@holotronic.dk>
 
 #install dependences for:
@@ -37,11 +37,13 @@ COPY install_config-petalinux.txt /tmp/
 
 ADD Xilinx_Unified_2020.2_1118_1232.tar.gz /tmp/
 
+RUN mkdir -p /home/vivado
+
 RUN /tmp/Xilinx_Unified_2020.2_1118_1232/xsetup --agree XilinxEULA,3rdPartyEULA,WebTalkTerms --batch Install --config /tmp/install_config-vitis.txt && \
     /tmp/Xilinx_Unified_2020.2_1118_1232/xsetup --agree XilinxEULA,3rdPartyEULA,WebTalkTerms --batch Install --config /tmp/install_config-petalinux.txt && \
     rm -rf /tmp/*
 
-FROM ubuntu:20.04
+FROM ubuntu:18.04
 
 #install dependences for:
 # * downloading Vivado (wget)
@@ -61,23 +63,64 @@ RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y \
   lsb-release \
   software-properties-common
 
-RUN apt-get update && apt-get install -y \
+RUN dpkg --add-architecture i386 
+
+RUN apt-get update && apt-get upgrade && apt-get install -y \
   net-tools \
   unzip \
   gcc \
   g++ \
   python \
   libtinfo5
-
+  
+  
 # turn off recommends on container OS
 # install required dependencies
 RUN echo 'APT::Install-Recommends "0";\nAPT::Install-Suggests "0";' > \
     /etc/apt/apt.conf.d/01norecommend && \
     apt-get update && \
     apt-get -y install \
-        bzip2 \
+        iproute2 \
+        gawk \
+        python3 \
+        make \
+        libncurses5-dev \
+        zlib1g-dev \
+        libssl-dev  \
+        flex \
+        bison \
+        libselinux1 \
+        gnupg \
+        wget \
+        git-core \
+        diffstat \
+        chrpath \
+        socat \
+        xterm \
+        autoconf \
+        libtool \
+        tar \
+        texinfo \
+        gcc-multilib \
+        automake \
+        zlib1g:i386 \
+        screen \
+        pax \
+        gzip \
+        cpio \
+        python3-pexpect \
+        xz-utils \
+        debianutils \
+        iputils-ping \
+        python3-git \
+        python3-jinja2 \
+        libegl1-mesa \
+        ibsdl1.2-dev \
+        pylint3 \
+        alsa-utils \
         libc6-i386 \
         git \
+        rsync \
         libfontconfig1 \
         libglib2.0-0 \
         sudo \
@@ -98,8 +141,8 @@ RUN echo 'APT::Install-Recommends "0";\nAPT::Install-Suggests "0";' > \
         device-tree-compiler \
         parted \
         udev \
-        python-pip && \
-        pip install intelhex && \
+        python3-pip && \
+        pip3 install intelhex && \
         echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \
         locale-gen && \
         gem install fpm && \
@@ -107,21 +150,24 @@ RUN echo 'APT::Install-Recommends "0";\nAPT::Install-Suggests "0";' > \
 
 COPY --from=stage1 /tools/Xilinx /tools/Xilinx
 COPY --from=stage1 /root /root
+COPY --from=stage1 /home /home
 
-COPY xrt_202110.2.9.0_20.04-amd64-xrt.deb /tmp/
-RUN apt-get install -y /tmp/xrt_202110.2.9.0_20.04-amd64-xrt.deb && rm -rf /tmp/*
+COPY xrt_202020.2.8.743_18.04-amd64-xrt.deb /tmp/
+RUN apt-get install -y /tmp/xrt_202020.2.8.743_18.04-amd64-xrt.deb && rm -rf /tmp/*
 
 RUN /tools/Xilinx/Vitis/2020.2/scripts/installLibs.sh
 
-RUN useradd -m vivado && echo "vivado:vivado" | chpasswd && adduser vivado sudo
+RUN useradd -m vivado && echo "vivado:vivado" | chpasswd && adduser vivado sudo && adduser vivado audio && \
+    chown -R vivado:vivado /home/vivado
 USER vivado
 WORKDIR /home/vivado
 
 #add vivado tools to path
-#copy in the license file
 RUN echo "source /tools/Xilinx/Vivado/2020.2/settings64.sh" >> /home/vivado/.bashrc && \
     echo "source /opt/xilinx/xrt/setup.sh" >> /home/vivado/.bashrc && \
-    mkdir /home/vivado/.Xilinx
+    echo "source /home/vivado/petalinux/2020.2/settings.sh" >> /home/vivado/.bashrc
+
+COPY ding.wav /home/vivado/
 
 # customize gui (font scaling 125%)
 #COPY --chown=vivado:vivado vivado.xml /home/vivado/.Xilinx/Vivado/2020.2/vivado.xml
