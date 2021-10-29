@@ -1,7 +1,7 @@
-#### PetaLinux Product Install Configuration ####
-Edition=PetaLinux Product
+#### PetaLinux aarch64 Install Configuration ####
+Edition=PetaLinux aarch64
 
-Product=PetaLinux (Linux only)
+Product=PetaLinux
 
 # Path where Xilinx software will be installed.
 Destination=/home/vivado
@@ -10,7 +10,7 @@ Destination=/home/vivado
 Modules=
 
 # Choose the post install scripts you'd like to run as part of the finalization step. Please note that some of these scripts may require user interaction during runtime.
-InstallOptions=Enable WebTalk for Vivado to send usage statistics to Xilinx (Always enabled for WebPACK license):1
+InstallOptions=Enable WebTalk for Vivado to send usage statistics to Xilinx (Always enabled for Vivado ML Standard license):1
 
 ## Shortcuts and File associations ##
 # Choose whether Start menu/Application menu shortcuts will be created or not.
