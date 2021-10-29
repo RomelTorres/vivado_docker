@@ -32,20 +32,21 @@ RUN apt-get update && apt-get install -y \
 # RUN apt-get install -y /tmp/xrt_202110.2.9.0_20.04-amd64-xrt.deb && rm -rf /tmp/*
 
 # copy in config file
-COPY install_config-vitis.txt /tmp/
+#COPY install_config-vitis.txt /tmp/
+COPY install_config-vivado.txt /tmp/
 COPY install_config-petalinux.txt /tmp/
 
-ADD Xilinx_Unified_2021.1_0610_2318.tar.gz /tmp/
+ADD Xilinx_Unified_2021.2_1021_0703.tar.gz /tmp/
 
 RUN mkdir -p /home/vivado
 
-RUN /tmp/Xilinx_Unified_2021.1_0610_2318/xsetup --agree XilinxEULA,3rdPartyEULA,WebTalkTerms --batch Install --config /tmp/install_config-vitis.txt
+RUN /tmp/Xilinx_Unified_2021.2_1021_0703/xsetup --agree XilinxEULA,3rdPartyEULA --batch Install --config /tmp/install_config-vivado.txt
 
-RUN useradd -m vivado && echo "vivado:vivado" | chpasswd && adduser vivado sudo && adduser vivado audio && \
+RUN useradd -m vivado && echo "vivado:vivado" | chpasswd && adduser vivado sudo audio video && \
     chown -R vivado:vivado /home/vivado
 USER vivado
 
-RUN /tmp/Xilinx_Unified_2021.1_0610_2318/xsetup --agree XilinxEULA,3rdPartyEULA,WebTalkTerms --batch Install --config /tmp/install_config-petalinux.txt
+RUN /tmp/Xilinx_Unified_2021.2_1021_0703/xsetup --agree XilinxEULA,3rdPartyEULA --batch Install --config /tmp/install_config-petalinux.txt
 
 USER root
 run rm -rf /tmp/*
@@ -164,7 +165,7 @@ COPY --from=stage1 /root /root
 COPY xrt_202110.2.11.634_20.04-amd64-xrt.deb /tmp/
 RUN apt-get install -y /tmp/xrt_202110.2.11.634_20.04-amd64-xrt.deb && rm -rf /tmp/*
 
-RUN /tools/Xilinx/Vitis/2021.1/scripts/installLibs.sh
+RUN /tools/Xilinx/Vitis/2021.2/scripts/installLibs.sh
 
 RUN useradd -m vivado && echo "vivado:vivado" | chpasswd && adduser vivado sudo && adduser vivado audio && \
     chown -R vivado:vivado /home/vivado
@@ -184,14 +185,14 @@ USER vivado
 WORKDIR /home/vivado
 
 #add vivado tools to path
-RUN echo "source /tools/Xilinx/Vivado/2021.1/settings64.sh" >> /home/vivado/.bashrc && \
+RUN echo "source /tools/Xilinx/Vivado/2021.2/settings64.sh" >> /home/vivado/.bashrc && \
     echo "source /opt/xilinx/xrt/setup.sh" >> /home/vivado/.bashrc && \
-    echo "source /home/vivado/petalinux/2021.1/settings.sh" >> /home/vivado/.bashrc
+    echo "source /home/vivado/petalinux/2021.2/settings.sh" >> /home/vivado/.bashrc
 
 COPY ding.wav /home/vivado/
 
 # customize gui (font scaling 125%)
-#COPY --chown=vivado:vivado vivado.xml /home/vivado/.Xilinx/Vivado/2021.1/vivado.xml
+#COPY --chown=vivado:vivado vivado.xml /home/vivado/.Xilinx/Vivado/2021.2/vivado.xml
 
 # add U96 board files
-ADD /board_files.tar.gz /tools/Xilinx/Vivado/2021.1/data/boards/
+ADD /board_files.tar.gz /tools/Xilinx/Vivado/2021.2/data/boards/
