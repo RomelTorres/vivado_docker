@@ -1,20 +1,20 @@
-#### Vivado ML Standard Install Configuration ####
-Edition=Vivado ML Standard
+#### PetaLinux aarch64 Install Configuration ####
+Edition=PetaLinux aarch64
 
-Product=Vivado
+Product=PetaLinux
 
 # Path where Xilinx software will be installed.
-Destination=/tools/Xilinx
+Destination=/home/vivado
 
 # Choose the Products/Devices the you would like to install.
-Modules=Virtex UltraScale+ HBM:1,DocNav:1,Kintex UltraScale:1,Artix UltraScale+:1,Spartan-7:1,Artix-7:1,Virtex UltraScale+:1,Vitis Model Composer(Xilinx Toolbox for MATLAB and Simulink. Includes the functionality of System Generator for DSP):1,Zynq UltraScale+ MPSoC:1,Zynq-7000:1,Kintex-7:1,Install Devices for Kria SOMs and Starter Kits:1,Kintex UltraScale+:1
+Modules=
 
 # Choose the post install scripts you'd like to run as part of the finalization step. Please note that some of these scripts may require user interaction during runtime.
-InstallOptions=
+InstallOptions=Enable WebTalk for Vivado to send usage statistics to Xilinx (Always enabled for Vivado ML Standard license):1
 
 ## Shortcuts and File associations ##
 # Choose whether Start menu/Application menu shortcuts will be created or not.
-CreateProgramGroupShortcuts=1
+CreateProgramGroupShortcuts=0
 
 # Choose the name of the Start menu/Application menu shortcut. This setting will be ignored if you choose NOT to create shortcuts.
 ProgramGroupFolder=Xilinx Design Tools
@@ -23,7 +23,7 @@ ProgramGroupFolder=Xilinx Design Tools
 CreateShortcutsForAllUsers=0
 
 # Choose whether shortcuts will be created on the desktop or not.
-CreateDesktopShortcuts=1
+CreateDesktopShortcuts=0
 
 # Choose whether file associations will be created or not.
 CreateFileAssociation=1
