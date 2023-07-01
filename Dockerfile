@@ -120,24 +120,24 @@ RUN apt-get update && apt-get upgrade -y && apt-get install -y \
 # RUN apt-get install -y /tmp/xrt_202110.2.9.0_20.04-amd64-xrt.deb && rm -rf /tmp/*
 
 # copy in config file
+COPY install_config-vivado.txt /tmp/
 #COPY install_config-vitis.txt /tmp/
-COPY install_config-vitis.txt /tmp/
 COPY install_config-petalinux.txt /tmp/
 
-ADD Xilinx_Unified_2022.1_0420_0327.tar.gz /tmp/
+ADD Xilinx_Unified_2022.2_1014_8888.tar.gz /tmp/
 
 RUN mkdir -p /home/vivado
 
 RUN locale-gen en_US.UTF-8 && update-locale LANG=en_US.UTF-8
 
-RUN /tmp/Xilinx_Unified_2022.1_0420_0327/xsetup --agree XilinxEULA,3rdPartyEULA --batch Install --config /tmp/install_config-vitis.txt
+RUN /tmp/Xilinx_Unified_2022.2_1014_8888/xsetup --agree XilinxEULA,3rdPartyEULA --batch Install --config /tmp/install_config-vivado.txt
 
 RUN useradd -m vivado && echo "vivado:vivado" | chpasswd && adduser vivado sudo \
     && adduser vivado audio && adduser vivado video && \
     chown -R vivado:vivado /home/vivado
 USER vivado
 
-RUN /tmp/Xilinx_Unified_2022.1_0420_0327/xsetup --agree XilinxEULA,3rdPartyEULA --batch Install --config /tmp/install_config-petalinux.txt
+RUN /tmp/Xilinx_Unified_2022.2_1014_8888/xsetup --agree XilinxEULA,3rdPartyEULA --batch Install --config /tmp/install_config-petalinux.txt
 
 USER root
 run rm -rf /tmp/*
@@ -278,7 +278,7 @@ RUN echo 'APT::Install-Recommends "0";\nAPT::Install-Suggests "0";' > \
 COPY --from=stage1 /tools/Xilinx /tools/Xilinx
 COPY --from=stage1 /root /root
 
-RUN /tools/Xilinx/Vitis/2022.1/scripts/installLibs.sh
+#RUN /tools/Xilinx/Vitis/2022.2/scripts/installLibs.sh
 
 RUN useradd -m vivado && echo "vivado:vivado" | chpasswd && adduser vivado sudo && adduser vivado audio && \
     chown -R vivado:vivado /home/vivado
@@ -293,6 +293,14 @@ RUN apt-get update && apt-get install -y \
     libgnutls28-dev \
     libgl1-mesa-glx \
     libgl1-mesa-dri \
+    lib32stdc++6 \
+    libfontconfig1:i386 \
+    libx11-6:i386 \
+    libxext6:i386 \
+    libxrender1:i386 \
+    libsm6:i386 \
+    libqt5gui5:i386 \
+    gnome-icon-theme \
     && rm -rf /var/lib/apt/lists/*
 
 RUN apt-get update && apt-get upgrade -y
@@ -302,8 +310,8 @@ RUN usermod -a -G video vivado
 COPY accept-eula.sh /
 RUN chmod a+rx /accept-eula.sh
 
-RUN sudo -u vivado -i /accept-eula.sh /home/vivado/PetaLinux/2022.1/bin/petalinux-v2022.1-final-installer.run /home/vivado/petalinux "arm aarch64" && \
-    rm -f /home/vivado/PetaLinux/2022.1/bin/petalinux-v2022.1-final-installer.run /accept-eula.sh
+RUN sudo -u vivado -i /accept-eula.sh /home/vivado/PetaLinux/2022.2/bin/petalinux-v2022.2-final-installer.run /home/vivado/petalinux "arm aarch64" && \
+    rm -f /home/vivado/PetaLinux/2022.2/bin/petalinux-v2022.2-final-installer.run /accept-eula.sh
 
 
 # make /bin/sh symlink to bash instead of dash:
@@ -317,13 +325,15 @@ WORKDIR /home/vivado
 #add vivado tools to path
 #    echo "source /opt/xilinx/xrt/setup.sh" >> /home/vivado/.bashrc && \
 
-RUN echo "source /tools/Xilinx/Vitis/2022.1/settings64.sh" >> /home/vivado/.bashrc && \
+#RUN echo "source /tools/Xilinx/Vitis/2022.2/settings64.sh" >> /home/vivado/.bashrc && \
+
+RUN echo "source /tools/Xilinx/Vivado/2022.2/settings64.sh" >> /home/vivado/.bashrc && \
     echo "source /home/vivado/petalinux/settings.sh" >> /home/vivado/.bashrc
 
 COPY ding.wav /home/vivado/
 
 # customize gui (font scaling 125%)
-#COPY --chown=vivado:vivado vivado.xml /home/vivado/.Xilinx/Vivado/2022.1/vivado.xml
+#COPY --chown=vivado:vivado vivado.xml /home/vivado/.Xilinx/Vivado/2022.2/vivado.xml
 
 # add U96 board files
-ADD /board_files.tar.gz /tools/Xilinx/Vivado/2022.1/data/boards/
+ADD /board_files.tar.gz /tools/Xilinx/Vivado/2022.2/data/boards/
